@@ -3,35 +3,34 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField]
-    private float Speed;
+    [SerializeField] private float speed;
     [SerializeField] private float mouseSensitivity;
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private float topClamp;
     [SerializeField] private float bottomClamp;
+    [SerializeField] private GameObject caddie;
     private Vector2 _movement;
     private Vector2 _look;
     private Rigidbody _rigidbody;
     private float _xRotation;
     
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         _rigidbody = GetComponent<Rigidbody>();
         Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
     }
     private void Update()
     {
         HandleLook();
     }
 
-    // Update is called once per frame
     private void FixedUpdate()
     {
         if (_movement.magnitude >= 0.01f)
         {
             Vector3 moveDirection = transform.TransformDirection(new Vector3(_movement.x, 0f, _movement.y));
-            _rigidbody.AddForce(moveDirection * Speed, ForceMode.Force);
+            _rigidbody.AddForce(moveDirection * speed);
         }
     }
     private void HandleLook()
@@ -39,7 +38,7 @@ public class PlayerController : MonoBehaviour
         float mouseX = _look.x * mouseSensitivity * Time.deltaTime;
         float mouseY = _look.y * mouseSensitivity * Time.deltaTime;
 
-        // Vertical pitch (Look up/down - affects Camera only)
+        // Look up/down - affects Camera only
         _xRotation -= mouseY;
         _xRotation = Mathf.Clamp(_xRotation, bottomClamp, topClamp);
 
@@ -48,8 +47,21 @@ public class PlayerController : MonoBehaviour
             cameraTransform.localRotation = Quaternion.Euler(_xRotation, 0f, 0f);
         }
 
-        // Horizontal yaw (Look left/right - rotates Player Body)
+        // Look left/right - rotates Player Body
         transform.Rotate(Vector3.up * mouseX);
+    }
+
+    private void HandleCaddie()
+    {
+
+    }
+
+    public void OnInteract(InputValue ctx)
+    {
+        if (ctx.isPressed)
+        {
+            HandleCaddie();
+        }
     }
 
     public void OnMove(InputValue ctx)
