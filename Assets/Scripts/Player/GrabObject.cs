@@ -7,8 +7,6 @@ public class GrabObject : MonoBehaviour
     [SerializeField] private float maxDistance;
     [SerializeField] private LayerMask hitLayers;
     [SerializeField] private float followSpeed;
-    [SerializeField] private float throwForce;
-    [SerializeField] private float velocityMultiplier;
     [SerializeField] private float grabStrength;
     
 
@@ -27,11 +25,6 @@ public class GrabObject : MonoBehaviour
     {
         if (_isHolding)
         {
-            // Vector3 targetPosition = _camera.transform.position + (_camera.transform.forward * _holdDistance);
-
-            // Vector3 nextPosition = Vector3.Lerp(_targetRb.position, targetPosition, Time.fixedDeltaTime * followSpeed);
-            // _targetRb.MovePosition(nextPosition);
-
             Vector3 targetPosition = _camera.transform.position + (_camera.transform.forward * _holdDistance);
             Vector3 movement = targetPosition - _targetRb.position;
 
@@ -49,19 +42,13 @@ public class GrabObject : MonoBehaviour
 
             if (Physics.Raycast(ray, out RaycastHit hit, maxDistance, hitLayers))
             {
-                Debug.Log($"Touché : {hit.collider.name}");
                 Hold(hit);
-            }
-            else
-            {
-                Debug.Log($"Rien touché");
             }
         }
         else 
         {
             if (_targetRb != null)
             {
-                Debug.Log("Lâché !");
                 Release();
             }
         }
@@ -73,15 +60,11 @@ public class GrabObject : MonoBehaviour
                     
         _holdDistance = hit.distance; 
 
-        // _targetRb.useGravity = false;
         _isHolding = true;
     }
 
     private void Release()
     {
-        // _targetRb.useGravity = true;
-
-
         _targetRb = null;
         _isHolding = false;
     }

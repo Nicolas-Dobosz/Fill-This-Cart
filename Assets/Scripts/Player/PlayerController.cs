@@ -4,21 +4,23 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private float speed;
+    [SerializeField] private float jumpForce;
     [SerializeField] private float mouseSensitivity;
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private float topClamp;
     [SerializeField] private float bottomClamp;
-    [SerializeField] private GameObject caddie;
     private Vector2 _movement;
     private Vector2 _look;
     private Rigidbody _rigidbody;
     private float _xRotation;
+    private float _playerHigh;
     
     void Start()
     {
         _rigidbody = GetComponent<Rigidbody>();
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
+        _playerHigh = transform.localScale.y;
     }
     private void Update()
     {
@@ -30,7 +32,14 @@ public class PlayerController : MonoBehaviour
         if (_movement.magnitude >= 0.01f)
         {
             Vector3 moveDirection = transform.TransformDirection(new Vector3(_movement.x, 0f, _movement.y));
-            _rigidbody.AddForce(moveDirection * speed);
+            _rigidbody.linearVelocity = new Vector3(moveDirection.x * speed, _rigidbody.linearVelocity.y, moveDirection.z * speed);
+        }
+        else
+        {
+            if(IsGrounded())
+            {
+                _rigidbody.linearVelocity = new Vector3(0f, _rigidbody.linearVelocity.y, 0f);
+            }
         }
     }
     private void HandleLook()
@@ -51,19 +60,6 @@ public class PlayerController : MonoBehaviour
         transform.Rotate(Vector3.up * mouseX);
     }
 
-    private void HandleCaddie()
-    {
-
-    }
-
-    public void OnInteract(InputValue ctx)
-    {
-        if (ctx.isPressed)
-        {
-            HandleCaddie();
-        }
-    }
-
     public void OnMove(InputValue ctx)
     {
         _movement = ctx.Get<Vector2>();
@@ -72,4 +68,20 @@ public class PlayerController : MonoBehaviour
     {
         _look = ctx.Get<Vector2>();
     }
+    public void OnJump(InputValue ctx)
+    {
+        if (ctx.isPressed && IsGrounded())
+        {
+            _rigidbody.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+        }
+    }
+    private bool IsGrounded()
+    {
+        if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, _playerHigh + 0.1f))
+        {
+            return hit.collider.gameObject != gameObject;
+        }
+        return false;
+    }
+    
 }
