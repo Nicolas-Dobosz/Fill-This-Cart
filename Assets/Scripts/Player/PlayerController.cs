@@ -3,24 +3,31 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
+    [Header("Movement")]
     [SerializeField] private float speed;
+    [SerializeField] private float sprintMultiplier;
     [SerializeField] private float jumpForce;
-    [SerializeField] private float mouseSensitivity;
+
+    [Header("Camera")]
     [SerializeField] private Transform cameraTransform;
+    [SerializeField] private float mouseSensitivity;
     [SerializeField] private float topClamp;
     [SerializeField] private float bottomClamp;
+    
     private Vector2 _movement;
     private Vector2 _look;
     private Rigidbody _rigidbody;
     private float _xRotation;
-    private float _playerHigh;
+    private float _playerHeight;
+    private bool _isSprinting;
+    private float _currentSpeed;
     
     void Start()
     {
         _rigidbody = GetComponent<Rigidbody>();
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
-        _playerHigh = transform.localScale.y;
+        _playerHeight = transform.localScale.y;
     }
     private void Update()
     {
@@ -29,10 +36,15 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (IsGrounded())
+        {
+            _currentSpeed = speed * (_isSprinting ? sprintMultiplier : 1f);
+        }
+
         if (_movement.magnitude >= 0.01f)
         {
             Vector3 moveDirection = transform.TransformDirection(new Vector3(_movement.x, 0f, _movement.y));
-            _rigidbody.linearVelocity = new Vector3(moveDirection.x * speed, _rigidbody.linearVelocity.y, moveDirection.z * speed);
+            _rigidbody.linearVelocity = new Vector3(moveDirection.x * _currentSpeed, _rigidbody.linearVelocity.y, moveDirection.z * _currentSpeed);
         }
         else
         {
@@ -75,9 +87,13 @@ public class PlayerController : MonoBehaviour
             _rigidbody.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         }
     }
+    public void OnSprint(InputValue ctx)
+    {
+        _isSprinting = ctx.isPressed;
+    }
     private bool IsGrounded()
     {
-        if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, _playerHigh + 0.1f))
+        if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, _playerHeight + 0.1f))
         {
             return hit.collider.gameObject != gameObject;
         }
