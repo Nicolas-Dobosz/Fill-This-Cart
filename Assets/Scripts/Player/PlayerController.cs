@@ -7,6 +7,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float speed;
     [SerializeField] private float sprintMultiplier;
     [SerializeField] private float jumpForce;
+    [SerializeField] private float gravityMultiplier;
 
     [Header("Camera")]
     [SerializeField] private Transform cameraTransform;
@@ -36,10 +37,7 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (IsGrounded())
-        {
-            _currentSpeed = speed * (_isSprinting ? sprintMultiplier : 1f);
-        }
+        _currentSpeed = speed * (_isSprinting ? sprintMultiplier : 1f);
 
         if (_movement.magnitude >= 0.01f)
         {
@@ -53,7 +51,14 @@ public class PlayerController : MonoBehaviour
                 _rigidbody.linearVelocity = new Vector3(0f, _rigidbody.linearVelocity.y, 0f);
             }
         }
+
+        // custom gravity
+        if (!IsGrounded())
+        {
+            _rigidbody.linearVelocity += Vector3.up * Physics.gravity.y * (gravityMultiplier - 1) * Time.fixedDeltaTime;
+        }
     }
+
     private void HandleLook()
     {
         float mouseX = _look.x * mouseSensitivity * Time.deltaTime;

@@ -2936,7 +2936,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   speed: 5
   sprintMultiplier: 2
-  jumpForce: 15
+  jumpForce: 20
+  gravityMultiplier: 2.5
   cameraTransform: {fileID: 330585546}
   mouseSensitivity: 30
   topClamp: 80
