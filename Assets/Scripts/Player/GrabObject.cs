@@ -16,7 +16,9 @@ public class GrabObject : MonoBehaviour
 
     private Rigidbody _targetRb;
     private float _holdDistance;
-    private bool _isHolding;
+    private bool _isHolding = false;
+    private bool _isCaddie = false;
+    private float _yAngleOffset;
 
     // Update is called once per frame
     private void FixedUpdate()
@@ -28,6 +30,19 @@ public class GrabObject : MonoBehaviour
 
             Vector3 force = (movement * grabStrength) - (_targetRb.linearVelocity * followSpeed);
             _targetRb.AddForce(force);
+
+            if (_isCaddie)
+            {
+                // Conserve les angles actuels sur X et Z
+                Vector3 currentEuler = _targetRb.rotation.eulerAngles;
+
+                // Calcule le nouvel angle Y en appliquant le décalage initial
+                float targetYAngle = targetCamera.transform.eulerAngles.y + _yAngleOffset;
+
+                // Applique la rotation mise à jour uniquement sur Y
+                Quaternion targetRotation = Quaternion.Euler(currentEuler.x, targetYAngle, currentEuler.z);
+                _targetRb.MoveRotation(targetRotation);
+            }
         }
     }
     
@@ -58,6 +73,12 @@ public class GrabObject : MonoBehaviour
                     
         _holdDistance = hit.distance; 
 
+        if(_targetRb.CompareTag("Caddie"))
+        {
+            _isCaddie = true;
+            _yAngleOffset = _targetRb.rotation.eulerAngles.y - targetCamera.transform.eulerAngles.y;
+        }
+
         _isHolding = true;
     }
 
@@ -65,6 +86,7 @@ public class GrabObject : MonoBehaviour
     {
         _targetRb = null;
         _isHolding = false;
+        _isCaddie = false;
     }
 
     public void OnThrow()

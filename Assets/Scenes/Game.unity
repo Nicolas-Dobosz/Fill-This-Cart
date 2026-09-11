@@ -1294,7 +1294,7 @@ GameObject:
   - component: {fileID: 339451963}
   m_Layer: 3
   m_Name: Caddie
-  m_TagString: Untagged
+  m_TagString: Caddie
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2958,7 +2958,7 @@ MonoBehaviour:
   hitLayers:
     serializedVersion: 2
     m_Bits: 8
-  maxDistance: 5
+  maxDistance: 8
   followSpeed: 10
   grabStrength: 50
   throwForce: 10
