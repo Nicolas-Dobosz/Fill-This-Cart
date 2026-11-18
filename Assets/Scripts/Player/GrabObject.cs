@@ -15,6 +15,7 @@ public class GrabObject : MonoBehaviour
     [SerializeField] private float yBoost;
 
     private Rigidbody _targetRb;
+    private Vector3 _grabPointOffset;
     private float _holdDistance;
     private bool _isHolding = false;
     private bool _isCaddie = false;
@@ -25,10 +26,12 @@ public class GrabObject : MonoBehaviour
     {
         if (_isHolding)
         {
-            Vector3 targetPosition = targetCamera.transform.position + (targetCamera.transform.forward * _holdDistance);
-            Vector3 movement = targetPosition - _targetRb.position;
+            Vector3 targetGrabPoint = targetCamera.transform.position + (targetCamera.transform.forward * _holdDistance);
+            Vector3 targetCenterPosition = targetGrabPoint - targetCamera.transform.TransformVector(_grabPointOffset);
 
+            Vector3 movement = targetCenterPosition - _targetRb.position;
             Vector3 force = (movement * grabStrength) - (_targetRb.linearVelocity * followSpeed);
+
             _targetRb.AddForce(force);
 
             if (_isCaddie)
@@ -50,8 +53,8 @@ public class GrabObject : MonoBehaviour
     {
         if (ctx.isPressed)
         {
-            Vector3 centerScreen = new Vector3(Screen.width / 2f, Screen.height / 2f, 0f);
-            Ray ray = targetCamera.ScreenPointToRay(centerScreen);
+            // Recup le milieu de chaque camera
+            Ray ray = targetCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
 
             if (Physics.Raycast(ray, out RaycastHit hit, maxDistance, hitLayers))
             {
@@ -72,6 +75,9 @@ public class GrabObject : MonoBehaviour
         _targetRb = hit.collider.attachedRigidbody;
                     
         _holdDistance = hit.distance; 
+
+        Vector3 offsetInWorld = hit.point - _targetRb.position;
+        _grabPointOffset = targetCamera.transform.InverseTransformVector(offsetInWorld);
 
         if(_targetRb.CompareTag("Caddie"))
         {

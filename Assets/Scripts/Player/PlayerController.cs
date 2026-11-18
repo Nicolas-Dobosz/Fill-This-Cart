@@ -41,11 +41,13 @@ public class PlayerController : MonoBehaviour
 
         if (_movement.magnitude >= 0.01f)
         {
+            // Vector 2D to 3D
             Vector3 moveDirection = transform.TransformDirection(new Vector3(_movement.x, 0f, _movement.y));
             _rigidbody.linearVelocity = new Vector3(moveDirection.x * _currentSpeed, _rigidbody.linearVelocity.y, moveDirection.z * _currentSpeed);
         }
         else
         {
+            // no slide
             if(IsGrounded())
             {
                 _rigidbody.linearVelocity = new Vector3(0f, _rigidbody.linearVelocity.y, 0f);
