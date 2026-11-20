@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class GrabObject : MonoBehaviour
 {
@@ -14,12 +15,26 @@ public class GrabObject : MonoBehaviour
     [SerializeField] private float throwForce;
     [SerializeField] private float yBoost;
 
+    [Header("Grab Line)")]
+    [SerializeField] private Transform lineOrigin;
+    [SerializeField] private int curveResolution;
+    [SerializeField] private float curveSag;
+    [SerializeField] private float velocityLag;
+    private LineRenderer _lineRenderer;
+
     private Rigidbody _targetRb;
     private Vector3 _grabPointOffset;
     private float _holdDistance;
     private bool _isHolding = false;
     private bool _isCaddie = false;
     private float _yAngleOffset;
+
+    private void Awake()
+    {
+        _lineRenderer = GetComponent<LineRenderer>();
+        _lineRenderer.positionCount = curveResolution;
+        _lineRenderer.enabled = false;
+    }
 
     // Update is called once per frame
     private void FixedUpdate()
@@ -46,7 +61,39 @@ public class GrabObject : MonoBehaviour
                 Quaternion targetRotation = Quaternion.Euler(currentEuler.x, targetYAngle, currentEuler.z);
                 _targetRb.MoveRotation(targetRotation);
             }
+
+            DrawGrabCurve();
         }
+    }
+
+    private void DrawGrabCurve()
+    {
+        _lineRenderer.enabled = true;
+
+        Vector3 startPoint = lineOrigin != null 
+            ? lineOrigin.position 
+            : targetCamera.transform.position + targetCamera.transform.right * 0.3f - targetCamera.transform.up * 0.3f;
+
+        Vector3 endPoint = _targetRb.position + targetCamera.transform.TransformVector(_grabPointOffset);
+
+        // 3. Point de contrôle au milieu avec un effet de gravité et d'inertie
+        Vector3 midPoint = Vector3.Lerp(startPoint, endPoint, 0.5f);
+        midPoint += Vector3.down * curveSag;
+        midPoint -= _targetRb.linearVelocity * velocityLag;
+
+        // 4. Calcul des points de la courbe de Bézier
+        for (int i = 0; i < curveResolution; i++)
+        {
+            float t = i / (float)(curveResolution - 1);
+            Vector3 point = CalculateQuadraticBezierPoint(t, startPoint, midPoint, endPoint);
+            _lineRenderer.SetPosition(i, point);
+        }
+    }
+
+    private Vector3 CalculateQuadraticBezierPoint(float t, Vector3 p0, Vector3 p1, Vector3 p2)
+    {
+        float u = 1 - t;
+        return (u * u * p0) + (2 * u * t * p1) + (t * t * p2);
     }
     
     public void OnGrab(InputValue ctx)
@@ -58,7 +105,17 @@ public class GrabObject : MonoBehaviour
 
             if (Physics.Raycast(ray, out RaycastHit hit, maxDistance, hitLayers))
             {
-                Hold(hit);
+                if (hit.transform.CompareTag("InteractableButton"))
+                {
+                    if (hit.collider.TryGetComponent(out InteractableButton button))
+                    {
+                        button.OnPress();
+                    }
+                }
+                else
+                {
+                    Hold(hit);
+                }
             }
         }
         else 
@@ -93,6 +150,7 @@ public class GrabObject : MonoBehaviour
         _targetRb = null;
         _isHolding = false;
         _isCaddie = false;
+        _lineRenderer.enabled = false;
     }
 
     public void OnThrow()
